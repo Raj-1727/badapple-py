@@ -1,4 +1,4 @@
-# Maintainer: YOURNAME
+
 
 pkgname=badapple-py
 pkgver=1.0.0
