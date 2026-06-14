@@ -1,0 +1,228 @@
+#!/usr/bin/env python3
+import os
+import sys
+import time
+import subprocess
+import shutil
+import signal
+import io
+import fcntl
+import tty
+import termios
+import struct
+import select
+
+from PIL import Image
+
+VIDEO_PATH = "/usr/share/badapple-py/badapple.mp4"
+
+ORIG_WIDTH = 480
+ORIG_HEIGHT = 360
+FPS = 30.0
+
+paused = False
+running = True
+
+audio_proc = None
+ffmpeg_proc = None
+
+
+def get_char_ratio():
+    try:
+        buf = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, b'\x00' * 8)
+        rows, cols, xpix, ypix = struct.unpack('HHHH', buf)
+        if xpix > 0 and ypix > 0 and cols > 0 and rows > 0:
+            return (xpix / cols) / (ypix / rows)
+    except Exception:
+        pass
+    return 0.5
+
+
+def cleanup(*_):
+    global running
+    running = False
+
+    try:
+        if ffmpeg_proc:
+            ffmpeg_proc.terminate()
+        if audio_proc:
+            audio_proc.terminate()
+    except Exception:
+        pass
+
+    sys.stdout.write("\033[?25h\033c")
+    sys.stdout.flush()
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, cleanup)
+signal.signal(signal.SIGTERM, cleanup)
+
+
+def check_input():
+    global paused, running
+
+    if not sys.stdin.isatty():
+        return
+
+    if select.select([sys.stdin], [], [], 0)[0]:
+        ch = sys.stdin.read(1)
+
+        if ch == " ":
+            paused = not paused
+
+            if paused:
+                audio_proc.send_signal(signal.SIGSTOP)
+            else:
+                audio_proc.send_signal(signal.SIGCONT)
+
+        elif ch == "q":
+            running = False
+
+
+if not os.path.exists(VIDEO_PATH):
+    sys.exit("Video not found")
+
+print("\033c", end="")
+sys.stdout.write("\033[?25l")
+sys.stdout.flush()
+
+subprocess.run('figlet -f "Larry 3D 2" "BAD APPLE" | lolcat', shell=True)
+
+print("Press any key to start...")
+
+fd = sys.stdin.fileno()
+old = termios.tcgetattr(fd)
+
+try:
+    tty.setraw(fd)
+
+    while True:
+        ch = sys.stdin.read(1)
+
+        if ch == '\x03':
+            continue
+
+        break
+
+finally:
+    termios.tcsetattr(fd, termios.TCSADRAIN, old)
+
+
+audio_proc = subprocess.Popen([
+    "ffplay",
+    "-nodisp",
+    "-autoexit",
+    "-loglevel", "quiet",
+    VIDEO_PATH
+])
+
+ffmpeg_proc = subprocess.Popen([
+    "ffmpeg",
+    "-i", VIDEO_PATH,
+    "-f", "image2pipe",
+    "-pix_fmt", "rgb24",
+    "-vcodec", "rawvideo",
+    "-"
+], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+
+time.sleep(0.1)
+
+frame_size = ORIG_WIDTH * ORIG_HEIGHT * 3
+
+frame_count = 0
+prev_term_size = (0, 0)
+char_ratio = get_char_ratio()
+video_aspect = ORIG_WIDTH / ORIG_HEIGHT
+
+start_time = time.time()
+pause_started = None
+
+try:
+    while running:
+
+        check_input()
+
+        if paused:
+            if pause_started is None:
+                pause_started = time.time()
+
+            time.sleep(0.05)
+            continue
+
+        elif pause_started is not None:
+            start_time += time.time() - pause_started
+            pause_started = None
+
+        raw_frame = ffmpeg_proc.stdout.read(frame_size)
+        if not raw_frame or len(raw_frame) != frame_size:
+            break
+
+        frame_count += 1
+
+        term_cols, term_lines = shutil.get_terminal_size()
+
+        if (term_cols, term_lines) != prev_term_size:
+            sys.stdout.write("\033[2J")
+            prev_term_size = (term_cols, term_lines)
+
+        max_w = term_cols
+        max_h = term_lines
+
+        needed_w = int(max_h * video_aspect / char_ratio)
+
+        if needed_w <= max_w:
+            target_width = needed_w
+            target_height = max_h
+        else:
+            target_width = max_w
+            target_height = int(max_w * char_ratio / video_aspect)
+
+        target_width = max(10, target_width)
+        target_height = max(5, target_height)
+
+        pad_top = (max_h - target_height) // 2
+        pad_left = (max_w - target_width) // 2
+
+        # 1. Load the raw bytes into Pillow
+        img = Image.frombytes("RGB", (ORIG_WIDTH, ORIG_HEIGHT), raw_frame)
+
+        # 2. Resize and convert to 8-bit Grayscale ("L")
+        img = img.resize((target_width, target_height)).convert("L")
+
+        # 3. Pull frame data explicitly into a Python list to avoid type mapping quirks
+        ASCII_CHARS = " .:-=+*#%@" 
+        pixels = list(img.getdata())
+
+        # 4. Generate the ASCII lines completely inside Python memory
+        ascii_lines = []
+        for y in range(target_height):
+            row_start = y * target_width
+            row_end = row_start + target_width
+            line = "".join(ASCII_CHARS[pixel * len(ASCII_CHARS) // 256] for pixel in pixels[row_start:row_end])
+            ascii_lines.append(line)
+
+        prefix = " " * pad_left
+        out = "\033[H"
+
+        for _ in range(pad_top):
+            out += "\033[K\n"
+
+        for line in ascii_lines:
+            out += prefix + line + "\033[K\n"
+
+        out += "\033[J"
+
+        expected_time = start_time + (frame_count / FPS)
+        now = time.time()
+
+        if expected_time > now:
+            time.sleep(expected_time - now)
+
+        sys.stdout.write(out)
+        sys.stdout.flush()
+
+except Exception:
+    cleanup()
+
+cleanup()
