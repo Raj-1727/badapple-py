@@ -16,23 +16,15 @@ depends=(
     'lolcat'
 )
 
-makedepends=('curl')
 
 source=(
     "$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
+    "badapple.mp4"
 )
 
-sha256sums=('SKIP')
+sha256sums=('SKIP' 'SKIP')
 
-_VIDEO_URL="https://github.com/trung-kieen/bad-apple-ascii/raw/refs/heads/main/bad_apple.mp4"
 
-build() {
-    mkdir -p "$srcdir/_build"
-
-    curl -L \
-        "$_VIDEO_URL" \
-        -o "$srcdir/_build/bad_apple.mp4"
-}
 
 package() {
     cd "$srcdir/$pkgname-$pkgver"
@@ -41,7 +33,7 @@ package() {
         "$pkgdir/usr/bin/badapple-py"
 
     install -Dm644 \
-        "$srcdir/_build/bad_apple.mp4" \
+        "$srcdir/badapple.mp4" \
         "$pkgdir/usr/share/badapple-py/badapple.mp4"
 
     install -Dm644 LICENSE \
