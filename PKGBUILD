@@ -42,7 +42,7 @@ package() {
 
     install -Dm644 \
         "$srcdir/_build/bad_apple.mp4" \
-        "$pkgdir/usr/share/badapple-py/bad_apple.mp4"
+        "$pkgdir/usr/share/badapple-py/badapple.mp4"
 
     install -Dm644 LICENSE \
         "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
