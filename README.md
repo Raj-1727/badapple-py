@@ -24,3 +24,12 @@ python badapple-py      # if running from the cloned repository
 # or
 badapple-py             # if installed from AUR
 ```
+---
+
+# Dependencies
+
+- Python
+- Pillow
+- FFmpeg
+- figlet
+- lolcat
