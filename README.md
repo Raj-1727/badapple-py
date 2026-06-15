@@ -5,7 +5,7 @@
 # Installation
 
 ## Using github
-`git clone https://github.com/Raj-1727/badapple-py`
+```git clone https://github.com/Raj-1727/badapple-py```
 ## Using an AUR helper(currently not available)
 
 ```
