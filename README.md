@@ -4,11 +4,11 @@
 
 # Installation
 
-## Using github
+## 1. Using github
 ```
 git clone https://github.com/Raj-1727/badapple-py
 ```
-## Using an AUR helper(currently not available)
+## 2. Using an AUR helper(currently not available)
 
 ```
 yay -S badapple-py
