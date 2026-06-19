@@ -33,8 +33,8 @@ badapple-py                                    # if installed from AUR
 
 # Dependencies
 
-- Python
-- Pillow - Image Processing
-- FFmpeg - Audio
-- figlet - ASCII Banner
-- lolcat - Rainbow Gradients
+- **Python**
+- **Pillow** - Image Processing
+- **FFmpeg** - Audio
+- **figlet** - ASCII Banner
+- **lolcat** - Rainbow Gradients
