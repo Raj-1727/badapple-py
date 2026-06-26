@@ -33,8 +33,8 @@ badapple-py                                    # if installed from AUR
 
 # Controls
 ```
-**q** - **quit**
-**spacebar** - **pause/unpause**
+q - quit
+spacebar** - pause/unpause
 ```
 -----
 
