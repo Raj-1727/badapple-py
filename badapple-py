@@ -89,6 +89,12 @@ sys.stdout.flush()
 
 subprocess.run('figlet -f "Larry 3D 2" "BAD APPLE" | lolcat', shell=True)
 
+print("""
+Controls:
+  SPACE - Pause/Resume
+  Q     - Quit
+""")
+
 print("Press any key to start...")
 
 fd = sys.stdin.fileno()
