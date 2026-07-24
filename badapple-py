@@ -14,7 +14,11 @@ import select
 
 from PIL import Image
 
-VIDEO_PATH = "/usr/share/badapple-py/badapple.mp4"
+VIDEO_LOCATION_1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "badapple.mp4")
+VIDEO_LOCATION_2 = "/usr/share/badapple-py/badapple.mp4"
+
+VIDEO_PATH = VIDEO_LOCATION_2 if os.path.exists(VIDEO_LOCATION_2) else VIDEO_LOCATION_1
+
 
 ORIG_WIDTH = 480
 ORIG_HEIGHT = 360
