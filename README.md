@@ -11,7 +11,6 @@ https://github.com/user-attachments/assets/db68ecc3-1c20-4f6e-bf89-585de3bcbca4
 ```
 git clone https://github.com/Raj-1727/badapple-py
 cd ~/badapple-py
-makepkg -si
 ```
 ## 2. Using an AUR helper
 
@@ -25,7 +24,7 @@ paru -S badapple-py
 # Usage
 
 ```
-python badapple-py(badapple-py works too)      # if running from the cloned repository
+python badapple-py      # if running from the cloned repository
 # or
 badapple-py                                    # if installed from AUR
 ```
