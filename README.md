@@ -26,7 +26,7 @@ paru -S badapple-py
 ```
 python badapple-py      # if running from the cloned repository
 # or
-badapple-py                                    # if installed from AUR
+badapple-py             # if installed from AUR
 ```
 ---
 
